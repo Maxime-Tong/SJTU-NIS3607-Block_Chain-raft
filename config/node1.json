@@ -1,8 +1,8 @@
 {
     "id": 1,
     "n": 7,
-    "port": 5010,
-    "proposalsize": 250,
+    "port": 10010,
+    "proposalsize": 1000,
     "committee": [
         10000,
         10010,

@@ -2,7 +2,7 @@
     "id": 6,
     "n": 7,
     "port": 10060,
-    "proposalsize": 250,
+    "proposalsize": 1000,
     "committee": [
         10000,
         10010,

@@ -10,8 +10,8 @@ class node_info:
 
     def read_from_log(self, id):
         filename = '../log/node' + str(id) + '.log'
-        propose_pattern = re.compile("generated proposal\[(.*?)\] at (\d+)\n")
-        commit_pattern = re.compile("committed proposal\[(.*?)\] at (\d+)\n")
+        propose_pattern = re.compile("generated Block\[(.*?)\] at (\d+)\n")
+        commit_pattern = re.compile("committed Block\[(.*?)\] at (\d+)\n")
         latencies = []
         with open(filename, "r") as f:
             lines = f.readlines()

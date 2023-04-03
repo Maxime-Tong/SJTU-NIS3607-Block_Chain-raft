@@ -12,8 +12,8 @@ type MyLogger struct {
 	logger *log.Logger
 }
 
-func InitLogger(id uint8) *MyLogger {
-	logfile := "../log/node" + strconv.Itoa(int(id)) + ".log"
+func InitLogger(name string, id uint8) *MyLogger {
+	logfile := "../log/" + name + strconv.Itoa(int(id)) + ".log"
 	f, err := os.OpenFile(logfile, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0777)
 	if err != nil {
 		fmt.Println("create log file failed:", err.Error())

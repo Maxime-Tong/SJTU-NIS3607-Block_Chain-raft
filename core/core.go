@@ -19,12 +19,16 @@ type Consensus struct {
 	port         uint64
 	proposalSize uint64
 
+	//BlockChain
+	blockChain *BlockChain
 	//logger
 	logger *mylogger.MyLogger
 
 	//rpc network
 	peers []*myrpc.ClientEnd
-	//add your variants
+
+	//message channel exapmle
+	msgChan chan *Block
 }
 
 func InitConsensus(config *Configuration) *Consensus {
@@ -34,8 +38,10 @@ func InitConsensus(config *Configuration) *Consensus {
 		n:            config.N,
 		port:         config.Port,
 		proposalSize: config.ProposalSize,
-		logger:       mylogger.InitLogger(config.Id),
+		blockChain:   InitBlockChain(config.Id),
+		logger:       mylogger.InitLogger("node", config.Id),
 		peers:        make([]*myrpc.ClientEnd, 0),
+		msgChan:      make(chan *Block, 1024),
 	}
 	for _, peer := range config.Committee {
 		clientEnd := &myrpc.ClientEnd{Port: uint64(peer)}
@@ -46,7 +52,12 @@ func InitConsensus(config *Configuration) *Consensus {
 	return c
 }
 func (c *Consensus) RpcExample(args *myrpc.ExampleArgs, reply *myrpc.ExampleReply) error {
-	c.logger.DPrintf("Invoke RpcExample: received Proposal = %v from %v", string(args.Proposal[:16]), args.From)
+	block := &Block{
+		PrevBlock: args.PrevBlock,
+		Data:      args.Data,
+	}
+	c.msgChan <- block
+	c.logger.DPrintf("Invoke RpcExample: receive Block[%v(%v)] at %v", Block2Key(block), Hash2Key(block.PrevBlock), time.Now().Nanosecond())
 	return nil
 }
 
@@ -60,29 +71,33 @@ func (c *Consensus) serve() {
 	go http.Serve(l, nil)
 }
 
-func (c *Consensus) getProposal() []byte {
+func (c *Consensus) getBlock() *Block {
 	//Generate a Proposal
 	proposal := make([]byte, c.proposalSize)
 	for i := uint64(0); i < c.proposalSize; i++ {
 		proposal[i] = byte(rand.Intn(26) + 61)
 	}
-	c.logger.DPrintf("Invoke getProposal: generated proposal[%v] at %v", string(proposal[:16]), time.Now().Nanosecond())
-	return proposal
+	block := c.blockChain.GenerateBlock(proposal)
+	c.logger.DPrintf("Invoke getProposal: generated Block[%v(%v)] at %v", Block2Key(block), Hash2Key(block.PrevBlock), time.Now().Nanosecond())
+	return block
 }
 
-func (c *Consensus) commitProposal(proposal []byte) {
-	c.logger.DPrintf("Invoke commitProposal: committed proposal[%v] at %v", string(proposal[:16]), time.Now().Nanosecond())
+func (c *Consensus) commitBlock(block *Block) {
+	if ok := c.blockChain.CommitBlock(block); ok {
+		c.logger.DPrintf("Invoke commitProposal: committed Block[%v(%v)] at %v", Block2Key(block), Hash2Key(block.PrevBlock), time.Now().Nanosecond())
+	}
 }
 
 func (c *Consensus) Run() {
 	// wait for other node to start
-	time.Sleep(time.Duration(2) * time.Second)
+	time.Sleep(time.Duration(1) * time.Second)
 	for {
-		proposal := c.getProposal()
-		args := &myrpc.ExampleArgs{From: c.id, Proposal: proposal}
+		block := c.getBlock()
+		args := &myrpc.ExampleArgs{From: c.id, PrevBlock: block.PrevBlock, Data: block.Data}
 		reply := &myrpc.ExampleReply{}
 		c.peers[c.id].Call("Consensus.RpcExample", args, reply)
-		c.commitProposal(proposal)
+		receivedBlock := <-c.msgChan
+		c.commitBlock(receivedBlock)
 		time.Sleep(time.Duration(1) * time.Second)
 	}
 }
