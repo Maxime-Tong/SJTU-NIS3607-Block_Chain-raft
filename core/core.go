@@ -91,6 +91,10 @@ func (c *Consensus) commitBlock(block *Block) {
 func (c *Consensus) Run() {
 	// wait for other node to start
 	time.Sleep(time.Duration(1) * time.Second)
+	// init rpc client
+	for id := range c.peers {
+		c.peers[id].Connect()
+	}
 	for {
 		block := c.getBlock()
 		args := &myrpc.ExampleArgs{From: c.id, PrevBlock: block.PrevBlock, Data: block.Data}
