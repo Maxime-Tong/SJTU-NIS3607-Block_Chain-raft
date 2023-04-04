@@ -25,8 +25,10 @@ class node_info:
                     if m2.group(1) in self.proposals.keys():
                         # print(m2.group(1), " ", int(m2.group(2)), " ", self.proposal[m2.group(1)])
                         latencies.append(int(m2.group(2)) - self.proposals[m2.group(1)])
-            print(f"node {id}: propose {len(self.proposals.keys())} times; commit {len(self.commits)} times; average latency is {sum(latencies)/len(latencies)} ns")
-
+            if len(latencies) !=  0:
+                print(f"node {id}: propose {len(self.proposals.keys())} times; commit {len(self.commits)} times; average latency is {sum(latencies)/len(latencies)} ns")
+            else:
+                print(f"node {id}: propose {len(self.proposals.keys())} times; commit {len(self.commits)} times")
 
 def check_safety(nodes):
     n = len(nodes)

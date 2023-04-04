@@ -19,29 +19,39 @@ type Consensus struct {
 	port         uint64
 	proposalSize uint64
 
+	//the sequence numeber for current pbft instance
+	seq uint64
+	//the round numeber for current pbft instance
+	round uint64
+	//block to be committed in current seq num; the value is nil when a new pbft instance starts
+	estimateBlock *Block
+
 	//BlockChain
 	blockChain *BlockChain
 	//logger
 	logger *mylogger.MyLogger
-
 	//rpc network
 	peers []*myrpc.ClientEnd
 
 	//message channel exapmle
-	msgChan chan *Block
+	msgChan chan *myrpc.ConsensusMsg
 }
 
 func InitConsensus(config *Configuration) *Consensus {
 	rand.Seed(time.Now().UnixNano())
 	c := &Consensus{
-		id:           config.Id,
-		n:            config.N,
-		port:         config.Port,
-		proposalSize: config.ProposalSize,
-		blockChain:   InitBlockChain(config.Id),
-		logger:       mylogger.InitLogger("node", config.Id),
-		peers:        make([]*myrpc.ClientEnd, 0),
-		msgChan:      make(chan *Block, 1024),
+		id:            config.Id,
+		n:             config.N,
+		port:          config.Port,
+		proposalSize:  config.ProposalSize,
+		seq:           0,
+		round:         0,
+		estimateBlock: nil,
+		blockChain:    InitBlockChain(config.Id),
+		logger:        mylogger.InitLogger("node", config.Id),
+		peers:         make([]*myrpc.ClientEnd, 0),
+
+		msgChan: make(chan *myrpc.ConsensusMsg, 1024),
 	}
 	for _, peer := range config.Committee {
 		clientEnd := &myrpc.ClientEnd{Port: uint64(peer)}
@@ -51,13 +61,10 @@ func InitConsensus(config *Configuration) *Consensus {
 
 	return c
 }
-func (c *Consensus) RpcExample(args *myrpc.ExampleArgs, reply *myrpc.ExampleReply) error {
-	block := &Block{
-		PrevBlock: args.PrevBlock,
-		Data:      args.Data,
-	}
-	c.msgChan <- block
-	c.logger.DPrintf("Invoke RpcExample: receive Block[%v(%v)] at %v", Block2Key(block), Hash2Key(block.PrevBlock), time.Now().Nanosecond())
+func (c *Consensus) RpcExample(args *myrpc.ConsensusMsg, reply *myrpc.ConsensusMsgReply) error {
+
+	c.logger.DPrintf("Invoke RpcExample: receive message %v from %v at %v", args.Type.String(), args.From, time.Now().Nanosecond())
+	c.msgChan <- args
 	return nil
 }
 
@@ -88,6 +95,63 @@ func (c *Consensus) commitBlock(block *Block) {
 	}
 }
 
+func (c *Consensus) broadcastMessage(msg *myrpc.ConsensusMsg) {
+	reply := &myrpc.ConsensusMsgReply{}
+	for id := range c.peers {
+		c.peers[id].Call("Consensus.RpcExample", msg, reply)
+	}
+}
+
+func (c *Consensus) getCurrentLeader() uint8 {
+	return uint8(c.round) % c.n
+}
+
+func (c *Consensus) startNewInstance() {
+	// init a new pbft instance
+	c.seq = c.seq + 1
+	c.round = 0
+	c.estimateBlock = nil
+	c.tryPropose()
+}
+
+func (c *Consensus) tryPropose() {
+	if c.id != c.getCurrentLeader() {
+		return
+	}
+	//slow down
+	time.Sleep(time.Duration(10) * time.Millisecond)
+	block := c.getBlock()
+	preprepareMsg := &myrpc.ConsensusMsg{
+		Type:      myrpc.PREPREPARE,
+		From:      c.id,
+		Seq:       c.seq,
+		Round:     c.round,
+		BlockHash: Block2Hash(block),
+		PrevBlock: block.PrevBlock,
+		Data:      block.Data,
+	}
+	c.broadcastMessage(preprepareMsg)
+
+}
+
+func (c *Consensus) handlePreprepare(msg *myrpc.ConsensusMsg) {
+	block := &Block{
+		PrevBlock: msg.PrevBlock,
+		Data:      msg.Data,
+	}
+	c.estimateBlock = block
+
+	c.commitBlock(block)
+	c.startNewInstance()
+}
+
+func (c *Consensus) handlePrepare(msg *myrpc.ConsensusMsg) {
+
+}
+
+func (c *Consensus) handleCommit(msg *myrpc.ConsensusMsg) {
+
+}
 func (c *Consensus) Run() {
 	// wait for other node to start
 	time.Sleep(time.Duration(1) * time.Second)
@@ -95,13 +159,18 @@ func (c *Consensus) Run() {
 	for id := range c.peers {
 		c.peers[id].Connect()
 	}
+
+	//propose in seq 0
+	c.tryPropose()
 	for {
-		block := c.getBlock()
-		args := &myrpc.ExampleArgs{From: c.id, PrevBlock: block.PrevBlock, Data: block.Data}
-		reply := &myrpc.ExampleReply{}
-		c.peers[c.id].Call("Consensus.RpcExample", args, reply)
-		receivedBlock := <-c.msgChan
-		c.commitBlock(receivedBlock)
-		time.Sleep(time.Duration(1) * time.Second)
+		msg := <-c.msgChan
+		switch msg.Type {
+		case myrpc.PREPREPARE:
+			c.handlePreprepare(msg)
+		case myrpc.PREPARE:
+			c.handlePrepare(msg)
+		case myrpc.COMMIT:
+			c.handleCommit(msg)
+		}
 	}
 }
