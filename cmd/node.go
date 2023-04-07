@@ -6,8 +6,6 @@ import (
 	"time"
 
 	"nis3607/core"
-
-	"github.com/schollz/progressbar/v3"
 )
 
 func main() {
@@ -19,11 +17,7 @@ func main() {
 	c := core.InitConsensus(config)
 	//start to run node for testTime s
 	go c.Run()
-	bar := progressbar.Default(int64(*testTime*100), "正在运行:")
-	for i := 0; i < *testTime*100; i++ {
-		bar.Add(1)
-		time.Sleep(time.Duration(10) * time.Millisecond)
-	}
+
+	time.Sleep(time.Duration(*testTime) * time.Second)
 	fmt.Printf("Node %v finished test\n", *id)
-	// time.Sleep(time.Duration(*testTime) * time.Second)
 }

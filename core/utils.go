@@ -16,11 +16,11 @@ func ComputeHash(raw []byte) ([]byte, error) {
 }
 
 type Configuration struct {
-	Id           uint8    `json:"id"`
-	N            uint8    `json:"n"`
-	Port         uint64   `json:"port"`
-	Committee    []uint64 `json:"committee"`
-	ProposalSize uint64   `json:"proposalsize"`
+	Id        uint8    `json:"id"`
+	N         uint8    `json:"n"`
+	Port      uint64   `json:"port"`
+	Committee []uint64 `json:"committee"`
+	BlockSize uint64   `json:"blocksize"`
 }
 
 func GetConfig(id int) *Configuration {

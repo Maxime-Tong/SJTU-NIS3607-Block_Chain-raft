@@ -4,31 +4,32 @@ import re
 class node_info:
     def __init__(self, id):
         self.id = id
-        self.proposals = {}
-        self.commits = []
+        self.proposals = []
+        self.commits = {}
+        self.maxSeq = 0
         self.read_from_log(id)
 
     def read_from_log(self, id):
-        filename = '../log/node' + str(id) + '.log'
-        propose_pattern = re.compile("generated Block\[(.*?)\] at (\d+)\n")
-        commit_pattern = re.compile("committed Block\[(.*?)\] at (\d+)\n")
-        latencies = []
+        filename = '../log/blockchain' + str(id) + '.log'
+        propose_pattern = re.compile("generate Block\[(.*?)\] in seq (\d+) at (\d+)\n")
+        commit_pattern = re.compile("commit Block\[(.*?)\] in seq (\d+) at (\d+)\n")
         with open(filename, "r") as f:
             lines = f.readlines()
             for line in lines:
                 m1 = propose_pattern.search(line)
                 m2 = commit_pattern.search(line)
                 if m1 != None:
-                    self.proposals[m1.group(1)] = int(m1.group(2))
+                    self.proposals.append(m1.group(1))
                 if m2 != None:
-                    self.commits.append(m2.group(1))
-                    if m2.group(1) in self.proposals.keys():
-                        # print(m2.group(1), " ", int(m2.group(2)), " ", self.proposal[m2.group(1)])
-                        latencies.append(int(m2.group(2)) - self.proposals[m2.group(1)])
-            if len(latencies) !=  0:
-                print(f"node {id}: propose {len(self.proposals.keys())} times; commit {len(self.commits)} times; average latency is {sum(latencies)/len(latencies)} ns")
-            else:
-                print(f"node {id}: propose {len(self.proposals.keys())} times; commit {len(self.commits)} times")
+                    if int(m2.group(2)) not in self.commits.keys():
+                        self.maxSeq = max(self.maxSeq, int(m2.group(2)))
+                        self.commits[int(m2.group(2))] = m2.group(1)
+                    else:
+                        print(f"node {id} has two or more commits at position {m2.group(2)}")
+                        sys.exit(-1)
+            
+            print(f"node {id} commits {len(self.commits.keys())} times, {self.maxSeq}")    
+
 
 def check_safety(nodes):
     n = len(nodes)
@@ -37,17 +38,26 @@ def check_safety(nodes):
             if i < j:
                 commits1 = nodes[i].commits
                 commits2 = nodes[j].commits
-                for k in range(min(len(commits1),len(commits2))):
-                    if commits1[k] != commits2[k]:
-                        print(f"node {i} has different commit with node {j} at position {k}, node {i} is {commits1[k]} while node {j} is {commits2[k]}")
+                k = 0
+                for k in range(min(nodes[i].maxSeq, nodes[i].maxSeq)):
+                    block1 = None
+                    if k in commits1.keys():
+                        block1 = commits1[k]
+                    block2 = None
+                    if k in commits2.keys():
+                        block2 = commits2[k]
+                    if block1 != block2:
+                        print(f"node {i} has different commit with node {j} at position {k}, node {i} is {block1} while node {j} is {block2}")
                         return False    
     return True
+
+
 def check_validity(nodes):
     all_proposals = []
     all_commits = []
     for node in nodes:
-        all_proposals += node.proposals.keys()
-        all_commits += node.commits
+        all_proposals += node.proposals
+        all_commits += node.commits.values()
     for commit in all_commits:
         if commit not in all_proposals:
              print(f"commit {commit} has never been proposed!")
@@ -71,7 +81,6 @@ if __name__ == "__main__":
     for i in range(n):
         node = node_info(i)
         nodes.append(node) 
-
     print("---------- check validity ------------")
     if check_validity(nodes):
         print("pass")

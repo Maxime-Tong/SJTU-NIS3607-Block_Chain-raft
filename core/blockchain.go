@@ -1,53 +1,43 @@
 package core
 
 import (
-	"bytes"
+	"math/rand"
 	"nis3607/mylogger"
+	"time"
 )
 
 type Block struct {
-	PrevBlock []byte
-	Data      []byte
+	Seq  uint64
+	Data []byte
 }
 
 type BlockChain struct {
-	gensisBlock        *Block
-	lastCommittedBlock *Block
-	Blocks             []*Block
-	BlocksMap          map[string]*Block
-	KeysMap            map[*Block]string
-	logger             *mylogger.MyLogger
+	Id        uint8
+	BlockSize uint64
+	Blocks    []*Block
+	BlocksMap map[string]*Block
+	KeysMap   map[*Block]string
+	logger    *mylogger.MyLogger
 }
 
-func InitBlockChain(id uint8) *BlockChain {
+func InitBlockChain(id uint8, blocksize uint64) *BlockChain {
 	blocks := make([]*Block, 1024)
 	blocksMap := make(map[string]*Block)
 	keysMap := make(map[*Block]string)
 	//Generate gensis block
-	prevBlock, _ := ComputeHash([]byte("NIS36107 blockchain"))
-	data, _ := ComputeHash([]byte("NIS36107 consensus"))
-	gensisBlock := &Block{
-		PrevBlock: prevBlock,
-		Data:      data,
-	}
 	blockChain := &BlockChain{
-		gensisBlock:        gensisBlock,
-		lastCommittedBlock: gensisBlock,
-		Blocks:             blocks,
-		BlocksMap:          blocksMap,
-		KeysMap:            keysMap,
-		logger:             mylogger.InitLogger("blockchain", id),
+		Id:        id,
+		BlockSize: blocksize,
+		Blocks:    blocks,
+		BlocksMap: blocksMap,
+		KeysMap:   keysMap,
+		logger:    mylogger.InitLogger("blockchain", id),
 	}
-	blockChain.AddBlockToChain(gensisBlock)
 	return blockChain
-
 }
 
 func Block2Hash(block *Block) []byte {
-	var buffer []byte
-	buffer = append(buffer, block.PrevBlock...)
-	buffer = append(buffer, block.Data...)
-	hash, _ := ComputeHash(buffer)
+	hash, _ := ComputeHash(block.Data)
 	return hash
 }
 
@@ -62,31 +52,27 @@ func Block2Key(block *Block) string {
 	return Hash2Key(Block2Hash(block))
 }
 
-func (bc *BlockChain) GetLastCommittedBlockHash() []byte {
-	return Block2Hash(bc.lastCommittedBlock)
-}
-
 func (bc *BlockChain) AddBlockToChain(block *Block) {
 	bc.Blocks = append(bc.Blocks, block)
 	bc.KeysMap[block] = Block2Key(block)
 	bc.BlocksMap[Block2Key(block)] = block
 }
 
-func (bc *BlockChain) GenerateBlock(data []byte) *Block {
-	return &Block{
-		PrevBlock: bc.GetLastCommittedBlockHash(),
-		Data:      data,
+// Generate a Block
+func (bc *BlockChain) getBlock(seq uint64) *Block {
+	data := make([]byte, bc.BlockSize)
+	for i := uint64(0); i < bc.BlockSize; i++ {
+		data[i] = byte(rand.Intn(256))
 	}
+	block := &Block{
+		Seq:  seq,
+		Data: data,
+	}
+	bc.logger.DPrintf("generate Block[%v] in seq %v at %v", Block2Key(block), block.Seq, time.Now().Nanosecond())
+	return block
 }
 
-func (bc *BlockChain) CommitBlock(block *Block) bool {
-	if !bytes.Equal(block.PrevBlock, bc.GetLastCommittedBlockHash()) {
-		panic("The prev of block to commit is not the last committed block")
-	}
-	bc.logger.DPrintf("Committed Block:%v(%v)", Block2Key(block), Hash2Key(block.PrevBlock))
-	bc.lastCommittedBlock = block
-	if _, ok := bc.KeysMap[block]; !ok {
-		bc.AddBlockToChain(block)
-	}
-	return true
+func (bc *BlockChain) commitBlock(block *Block) {
+	bc.AddBlockToChain(block)
+	bc.logger.DPrintf("commit Block[%v] in seq %v at %v", Block2Key(block), block.Seq, time.Now().Nanosecond())
 }
