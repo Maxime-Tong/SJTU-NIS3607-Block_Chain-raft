@@ -58,8 +58,10 @@ func (bc *BlockChain) AddBlockToChain(block *Block) {
 	bc.BlocksMap[Block2Key(block)] = block
 }
 
-// Generate a Block
+// Generate a Block: max rate is 20 blocks/s
 func (bc *BlockChain) getBlock(seq uint64) *Block {
+	//slow down
+	time.Sleep(time.Duration(50) * time.Millisecond)
 	data := make([]byte, bc.BlockSize)
 	for i := uint64(0); i < bc.BlockSize; i++ {
 		data[i] = byte(rand.Intn(256))
