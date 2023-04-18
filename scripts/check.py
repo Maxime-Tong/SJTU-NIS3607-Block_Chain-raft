@@ -28,7 +28,7 @@ class node_info:
                         print(f"node {id} has two or more commits at position {m2.group(2)}")
                         sys.exit(-1)
             
-            print(f"node {id} commits {len(self.commits.keys())} times, {self.maxSeq}")    
+            print(f"node {id} commits {len(self.commits.keys())} times")    
 
 
 def check_safety(nodes):

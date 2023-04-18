@@ -24,6 +24,8 @@ package myrpc
 type ConsensusMsg struct {
 	// Type MessageType
 	From uint8
+	Seq  uint64
+	Data []byte
 }
 
 type ConsensusMsgReply struct {
