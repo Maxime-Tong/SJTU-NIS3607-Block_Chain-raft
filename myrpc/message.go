@@ -21,6 +21,12 @@ package myrpc
 // 	return "UNKNOW MESSAGETYPE"
 // }
 
+type Event struct {
+	Message interface{}
+	Reply   interface{}
+	Err     chan error
+}
+
 type ConsensusMsg struct {
 	// Type MessageType
 	From uint8
@@ -29,4 +35,16 @@ type ConsensusMsg struct {
 }
 
 type ConsensusMsgReply struct {
+}
+
+type RequestVoteMsg struct {
+	Term         uint64
+	LastLogIndex uint64
+	LastLogTerm  uint64
+	CandidateId  uint8
+}
+
+type RequestVoteReply struct {
+	Term        uint64
+	VoteGranted bool
 }

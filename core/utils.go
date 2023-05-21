@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"os"
+	"time"
 )
 
 // ComputeHash computes hash of the given raw message
@@ -38,4 +40,20 @@ func GetConfig(id int) *Configuration {
 	var config Configuration
 	json.Unmarshal([]byte(data), &config)
 	return &config
+}
+
+func afterBetween(min time.Duration, max time.Duration) <-chan time.Time {
+	rand := rand.New(rand.NewSource(time.Now().UnixNano()))
+	d, delta := min, (max - min)
+	if delta > 0 {
+		d += time.Duration(rand.Int63n(int64(delta)))
+	}
+	return time.After(d)
+}
+
+func Min(x, y uint64) uint64 {
+	if x < y {
+		return x
+	}
+	return y
 }

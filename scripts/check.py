@@ -25,8 +25,9 @@ class node_info:
                         self.maxSeq = max(self.maxSeq, int(m2.group(2)))
                         self.commits[int(m2.group(2))] = m2.group(1)
                     else:
-                        print(f"node {id} has two or more commits at position {m2.group(2)}")
-                        sys.exit(-1)
+                        if self.commits[int(m2.group(2))] != m2.group(1):
+                            print(f"node {id} has two or more different commits at position {m2.group(2)}")
+                            sys.exit(-1)
             
             print(f"node {id} commits {len(self.commits.keys())} times")    
 
@@ -39,7 +40,7 @@ def check_safety(nodes):
                 commits1 = nodes[i].commits
                 commits2 = nodes[j].commits
                 k = 0
-                for k in range(min(nodes[i].maxSeq, nodes[i].maxSeq)):
+                for k in range(min(nodes[i].maxSeq, nodes[j].maxSeq)):
                     block1 = None
                     if k in commits1.keys():
                         block1 = commits1[k]
@@ -67,20 +68,33 @@ def check_validity(nodes):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python3 check.py [node number]")
+    if len(sys.argv) < 2:
+        print("Usage: python3 check.py [node number] [crash node...] ")
+        print("\t node number: total node number \n")
+        print("\t crash node: 0-2 crash nodes\n") 
         sys.exit()
     n = 0
     try:
         n = int(sys.argv[1])
+        crash_nodes = []
+        if len(sys.argv) >= 3:
+            crash_nodes = [int(x) for x in sys.argv[2:]]    
     except e:
         print("The parameter must be an integer")
         sys.exit()
     print("----------begin to check------------")
     nodes = []
+    nodes_for_safety = []
+
     for i in range(n):
         node = node_info(i)
         nodes.append(node) 
+    
+    for i in range(n):
+        if i not in crash_nodes:
+            nodes_for_safety.append(nodes[i]) 
+
+
     print("---------- check validity ------------")
     if check_validity(nodes):
         print("pass")
@@ -88,7 +102,7 @@ if __name__ == "__main__":
         print("not pass")
 
     print("---------- check safety --------------")
-    if check_safety(nodes):
+    if check_safety(nodes_for_safety):
         print("pass")
     else:
         print("not pass")

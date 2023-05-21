@@ -21,7 +21,8 @@ type BlockChain struct {
 }
 
 func InitBlockChain(id uint8, blocksize uint64) *BlockChain {
-	blocks := make([]*Block, 1024)
+	// blocks := make([]*Block, 1024)
+	blocks := make([]*Block, 0, 1024)
 	blocksMap := make(map[string]*Block)
 	keysMap := make(map[*Block]string)
 	//Generate gensis block
@@ -77,4 +78,21 @@ func (bc *BlockChain) getBlock(seq uint64) *Block {
 func (bc *BlockChain) commitBlock(block *Block) {
 	bc.AddBlockToChain(block)
 	bc.logger.DPrintf("commit Block[%v] in seq %v at %v", Block2Key(block), block.Seq, time.Now().Nanosecond())
+}
+
+type HeartbeatMsg struct {
+	Term         uint64
+	PrevLogIndex uint64
+	PrevLogTerm  uint64
+	EntryTerms   []uint64
+	Entries      []*Block
+	CommitIndex  uint64
+	Leaderid     uint8
+}
+
+type HeartbeatReply struct {
+	Term         uint64
+	Success      bool
+	LastLogIndex uint64
+	From         uint8
 }

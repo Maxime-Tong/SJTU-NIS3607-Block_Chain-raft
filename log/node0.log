@@ -1,0 +1,50 @@
+[Consesus log] 2023/05/21 08:08:03.936744 logger.go:32: become follower, terms: 0
+[Consesus log] 2023/05/21 08:08:04.097447 logger.go:32: timeout, try to become candidate, 160428700
+[Consesus log] 2023/05/21 08:08:04.097581 logger.go:32: become candidate, terms: 0
+[Consesus log] 2023/05/21 08:08:04.100426 logger.go:32: become leader, terms: 1
+[Consesus log] 2023/05/21 08:08:04.125991 logger.go:32: send heartbeat!
+[Consesus log] 2023/05/21 08:08:04.233475 logger.go:32: send heartbeat!
+[Consesus log] 2023/05/21 08:08:04.284862 logger.go:32: send heartbeat!
+[Consesus log] 2023/05/21 08:08:04.340863 logger.go:32: send heartbeat!
+[Consesus log] 2023/05/21 08:08:04.494962 logger.go:32: send heartbeat!
+[Consesus log] 2023/05/21 08:08:04.546371 logger.go:32: send heartbeat!
+[Consesus log] 2023/05/21 08:08:04.651827 logger.go:32: send heartbeat!
+[Consesus log] 2023/05/21 08:08:04.703068 logger.go:32: send heartbeat!
+[Consesus log] 2023/05/21 08:08:04.807809 logger.go:32: send heartbeat!
+[Consesus log] 2023/05/21 08:08:04.858875 logger.go:32: send heartbeat!
+[Consesus log] 2023/05/21 08:08:04.909321 logger.go:32: send heartbeat!
+[Consesus log] 2023/05/21 08:08:04.960180 logger.go:32: send heartbeat!
+[Consesus log] 2023/05/21 08:08:05.220601 logger.go:32: become follower, terms: 2
+[Consesus log] 2023/05/21 08:08:09.030672 logger.go:32: timeout, try to become candidate, 178867300
+[Consesus log] 2023/05/21 08:08:09.030878 logger.go:32: become candidate, terms: 7
+[Consesus log] 2023/05/21 08:08:09.032105 logger.go:32: become leader, terms: 8
+[Consesus log] 2023/05/21 08:08:09.058210 logger.go:32: send heartbeat!
+[Consesus log] 2023/05/21 08:08:09.160967 logger.go:32: send heartbeat!
+[Consesus log] 2023/05/21 08:08:09.524083 logger.go:32: become follower, terms: 9
+[Consesus log] 2023/05/21 08:08:10.358926 logger.go:32: timeout, try to become candidate, 151289200
+[Consesus log] 2023/05/21 08:08:10.359112 logger.go:32: become candidate, terms: 12
+[Consesus log] 2023/05/21 08:08:10.360272 logger.go:32: become leader, terms: 13
+[Consesus log] 2023/05/21 08:08:10.386666 logger.go:32: send heartbeat!
+[Consesus log] 2023/05/21 08:08:10.438403 logger.go:32: send heartbeat!
+[Consesus log] 2023/05/21 08:08:10.490697 logger.go:32: send heartbeat!
+[Consesus log] 2023/05/21 08:08:10.695426 logger.go:32: send heartbeat!
+[Consesus log] 2023/05/21 08:08:10.899553 logger.go:32: send heartbeat!
+[Consesus log] 2023/05/21 08:08:10.949988 logger.go:32: send heartbeat!
+[Consesus log] 2023/05/21 08:08:11.052589 logger.go:32: become follower, terms: 14
+[Consesus log] 2023/05/21 08:08:18.639274 logger.go:32: timeout, try to become candidate, 174447800
+[Consesus log] 2023/05/21 08:08:18.639574 logger.go:32: become candidate, terms: 26
+[Consesus log] 2023/05/21 08:08:18.694022 logger.go:32: become follower, terms: 27
+[Consesus log] 2023/05/21 08:08:24.048406 logger.go:32: timeout, try to become candidate, 186829800
+[Consesus log] 2023/05/21 08:08:24.048645 logger.go:32: become candidate, terms: 32
+[Consesus log] 2023/05/21 08:08:24.049693 logger.go:32: become leader, terms: 33
+[Consesus log] 2023/05/21 08:08:24.075153 logger.go:32: send heartbeat!
+[Consesus log] 2023/05/21 08:08:24.176797 logger.go:32: send heartbeat!
+[Consesus log] 2023/05/21 08:08:24.279260 logger.go:32: send heartbeat!
+[Consesus log] 2023/05/21 08:08:24.330944 logger.go:32: send heartbeat!
+[Consesus log] 2023/05/21 08:08:24.381549 logger.go:32: send heartbeat!
+[Consesus log] 2023/05/21 08:08:24.590582 logger.go:32: become follower, terms: 34
+[Consesus log] 2023/05/21 08:08:30.134505 logger.go:32: timeout, try to become candidate, 170336100
+[Consesus log] 2023/05/21 08:08:30.134727 logger.go:32: become candidate, terms: 40
+[Consesus log] 2023/05/21 08:08:30.135667 logger.go:32: become leader, terms: 41
+[Consesus log] 2023/05/21 08:08:30.202550 logger.go:32: send heartbeat!
+[Consesus log] 2023/05/21 08:08:30.512900 logger.go:32: become follower, terms: 42
