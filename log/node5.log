@@ -1,33 +1,18 @@
-[Consesus log] 2023/05/21 14:55:10.583924 logger.go:32: become follower, terms: 0
-[Consesus log] 2023/05/21 14:55:10.997186 logger.go:32: timeout, try to become candidate, 171912300
-[Consesus log] 2023/05/21 14:55:10.997284 logger.go:32: become candidate, terms: 1
-[Consesus log] 2023/05/21 14:55:10.998615 logger.go:32: become leader, terms: 2
-[Consesus log] 2023/05/21 14:55:11.025280 logger.go:32: send heartbeat!
-[Consesus log] 2023/05/21 14:55:11.281543 logger.go:32: become follower, terms: 3
-[Consesus log] 2023/05/21 14:55:25.846985 logger.go:32: timeout, try to become candidate, 170220100
-[Consesus log] 2023/05/21 14:55:25.847194 logger.go:32: become candidate, terms: 23
-[Consesus log] 2023/05/21 14:55:25.848389 logger.go:32: become leader, terms: 24
-[Consesus log] 2023/05/21 14:55:25.874926 logger.go:32: send heartbeat!
-[Consesus log] 2023/05/21 14:55:25.927479 logger.go:32: send heartbeat!
-[Consesus log] 2023/05/21 14:55:25.978207 logger.go:32: send heartbeat!
-[Consesus log] 2023/05/21 14:55:26.080484 logger.go:32: send heartbeat!
-[Consesus log] 2023/05/21 14:55:26.339214 logger.go:32: send heartbeat!
-[Consesus log] 2023/05/21 14:55:26.390083 logger.go:32: send heartbeat!
-[Consesus log] 2023/05/21 14:55:26.493751 logger.go:32: become follower, terms: 25
-[Consesus log] 2023/05/21 14:55:27.925845 logger.go:32: timeout, try to become candidate, 153064400
-[Consesus log] 2023/05/21 14:55:27.926009 logger.go:32: become candidate, terms: 27
-[Consesus log] 2023/05/21 14:55:27.927162 logger.go:32: become leader, terms: 28
-[Consesus log] 2023/05/21 14:55:28.083927 logger.go:32: send heartbeat!
-[Consesus log] 2023/05/21 14:55:28.186629 logger.go:32: become follower, terms: 29
-[Consesus log] 2023/05/21 14:55:28.398151 logger.go:32: timeout, try to become candidate, 157072700
-[Consesus log] 2023/05/21 14:55:28.398364 logger.go:32: become candidate, terms: 29
-[Consesus log] 2023/05/21 14:55:28.399589 logger.go:32: become leader, terms: 30
-[Consesus log] 2023/05/21 14:55:28.424798 logger.go:32: send heartbeat!
-[Consesus log] 2023/05/21 14:55:28.526694 logger.go:32: send heartbeat!
-[Consesus log] 2023/05/21 14:55:28.577730 logger.go:32: send heartbeat!
-[Consesus log] 2023/05/21 14:55:28.629062 logger.go:32: send heartbeat!
-[Consesus log] 2023/05/21 14:55:28.679967 logger.go:32: send heartbeat!
-[Consesus log] 2023/05/21 14:55:29.042592 logger.go:32: send heartbeat!
-[Consesus log] 2023/05/21 14:55:29.298377 logger.go:32: send heartbeat!
-[Consesus log] 2023/05/21 14:55:29.349279 logger.go:32: send heartbeat!
-[Consesus log] 2023/05/21 14:55:29.451414 logger.go:32: become follower, terms: 31
+[Consesus log] 2023/05/22 01:27:55.564932 logger.go:32: become follower, terms: 0
+[Consesus log] 2023/05/22 01:27:56.137648 logger.go:32: timeout, try to become candidate, 159349600
+[Consesus log] 2023/05/22 01:27:56.137815 logger.go:32: become candidate, terms: 2
+[Consesus log] 2023/05/22 01:27:56.139865 logger.go:32: become leader, terms: 3
+[Consesus log] 2023/05/22 01:27:56.166471 logger.go:32: send heartbeat!
+[Consesus log] 2023/05/22 01:27:56.218388 logger.go:32: send heartbeat!
+[Consesus log] 2023/05/22 01:27:56.423660 logger.go:32: send heartbeat!
+[Consesus log] 2023/05/22 01:27:56.632879 logger.go:32: become follower, terms: 4
+[Consesus log] 2023/05/22 01:27:59.404623 logger.go:32: timeout, try to become candidate, 152801700
+[Consesus log] 2023/05/22 01:27:59.404838 logger.go:32: become candidate, terms: 8
+[Consesus log] 2023/05/22 01:27:59.406345 logger.go:32: become leader, terms: 9
+[Consesus log] 2023/05/22 01:27:59.432092 logger.go:32: send heartbeat!
+[Consesus log] 2023/05/22 01:27:59.483233 logger.go:32: send heartbeat!
+[Consesus log] 2023/05/22 01:27:59.635181 logger.go:32: send heartbeat!
+[Consesus log] 2023/05/22 01:27:59.685991 logger.go:32: send heartbeat!
+[Consesus log] 2023/05/22 01:27:59.944983 logger.go:32: send heartbeat!
+[Consesus log] 2023/05/22 01:28:00.148485 logger.go:32: send heartbeat!
+[Consesus log] 2023/05/22 01:28:00.250987 logger.go:32: become follower, terms: 10

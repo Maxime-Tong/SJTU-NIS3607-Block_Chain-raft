@@ -286,19 +286,6 @@ func (c *Consensus) serve() {
 	go http.Serve(l, nil)
 }
 
-// func (c *Consensus) OnReceiveMessage(args *myrpc.ConsensusMsg, reply *myrpc.ConsensusMsgReply) error {
-// 	c.logger.DPrintf("Invoke RpcExample: receive message from %v at %v", args.From, time.Now().Nanosecond())
-// 	c.msgChan <- args
-// 	return nil
-// }
-
-// func (c *Consensus) broadcastMessage(msg *myrpc.ConsensusMsg) {
-// 	reply := &myrpc.ConsensusMsgReply{}
-// 	for id := range c.peers {
-// 		c.peers[id].Call("Consensus.OnReceiveMessage", msg, reply)
-// 	}
-// }
-
 func (c *Consensus) hasVoted() bool {
 	return c.votedFor != c.n
 }
@@ -449,5 +436,5 @@ func (c *Consensus) Run() {
 		c.peers[id].Connect()
 	}
 
-	go c.loop()
+	c.loop()
 }
