@@ -1,2 +1,4 @@
-cmd/*
-log/*
+/cmd
+/log
+
+*.log
