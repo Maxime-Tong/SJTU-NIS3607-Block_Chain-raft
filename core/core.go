@@ -366,7 +366,7 @@ func (c *Consensus) handleHeartbeatReply(msg *HeartbeatReply) {
 		return
 	}
 	if msg.Success {
-		c.nextIndex[msg.From] = msg.LastLogIndex + 1
+		c.nextIndex[msg.From] = Min(msg.LastLogIndex+1, c.seq)
 		c.matchIndex[msg.From] = msg.LastLogIndex
 		committedIndex := c.commitIndex
 		for i := committedIndex + 1; i <= msg.LastLogIndex; i++ {
