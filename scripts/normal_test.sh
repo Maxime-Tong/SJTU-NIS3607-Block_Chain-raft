@@ -1,4 +1,6 @@
 #!/bin/bash
+go build -o ../cmd/node ../cmd/node.go
+
 tmux new -d -s node0 "../cmd/node -i 0 -t 30"
 tmux new -d -s node1 "../cmd/node -i 1 -t 30"
 tmux new -d -s node2 "../cmd/node -i 2 -t 30"

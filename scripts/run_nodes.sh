@@ -1,3 +1,5 @@
+go build -o ../cmd/node ../cmd/node.go
+
 ../cmd/node -i 0 -t $1 &
 ../cmd/node -i 1 -t $1 &
 ../cmd/node -i 2 -t $1 &
