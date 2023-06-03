@@ -24,9 +24,9 @@ const (
 )
 
 const (
-	DefaultHeartbeatInterval = 25 * time.Millisecond
+	DefaultHeartbeatInterval = 50 * time.Millisecond
 
-	DefaultElectionTimeout = 150 * time.Millisecond
+	DefaultElectionTimeout = 300 * time.Millisecond
 )
 
 type Consensus struct {
