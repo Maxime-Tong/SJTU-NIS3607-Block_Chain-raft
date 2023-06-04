@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"net/rpc"
+	"sort"
 	"strconv"
 	"time"
 
@@ -100,13 +101,13 @@ func InitConsensus(config *Configuration) *Consensus {
 
 func (c *Consensus) followerLoop() {
 	c.logger.DPrintf("become follower, terms: %v", c.currentTerm)
-	since := time.Now()
 	timeoutC := afterBetween(c.electionTimeout, c.electionTimeout*2)
 
 	for c.state == Follower {
 		update := false
 		select {
 		case event := <-c.eventChan:
+			c.logger.DPrintf("process event")
 			switch msg := event.Message.(type) {
 			case *HeartbeatMsg:
 				update = c.handleHeartbeatMsg(msg, event.Reply.(*HeartbeatReply))
@@ -116,19 +117,12 @@ func (c *Consensus) followerLoop() {
 			// call back to event
 			event.Err <- nil
 		case <-timeoutC:
-			elapsedTime := time.Now().Sub(since)
-			c.logger.DPrintf("timeout, try to become candidate, %d", elapsedTime)
+			c.logger.DPrintf("timeout, try to become candidate")
 			c.state = Candidate
-			// if c.id == 1 {
-			// 	c.state = Candidate
-			// } else {
-			// 	update = true
-			// }
 		}
 
 		if update {
 			timeoutC = afterBetween(c.electionTimeout, c.electionTimeout*2)
-			since = time.Now()
 		}
 	}
 }
@@ -155,7 +149,7 @@ func (c *Consensus) candidateLoop() {
 				LastLogTerm:  c.blockTerms[c.seq-1],
 				CandidateId:  c.id,
 			}
-
+			c.logger.DPrintf("send votes request")
 			for id := range c.peers {
 				if id == int(c.id) {
 					continue
@@ -163,8 +157,10 @@ func (c *Consensus) candidateLoop() {
 
 				go func(p *myrpc.ClientEnd) {
 					reply := &myrpc.RequestVoteReply{}
-					p.Call("Consensus.OnReceiveRequestVoteMsg", msg, reply)
-					votesReplyC <- reply
+					connect := p.Call("Consensus.OnReceiveRequestVoteMsg", msg, reply)
+					if connect {
+						votesReplyC <- reply
+					}
 				}(c.peers[id])
 			}
 
@@ -187,6 +183,7 @@ func (c *Consensus) candidateLoop() {
 				return
 			}
 		case event := <-c.eventChan:
+			c.logger.DPrintf("process event")
 			switch msg := event.Message.(type) {
 			case *HeartbeatMsg:
 				_ = c.handleHeartbeatMsg(msg, event.Reply.(*HeartbeatReply))
@@ -202,6 +199,7 @@ func (c *Consensus) candidateLoop() {
 }
 
 func (c *Consensus) leaderLoop() {
+	max_chunk := uint64(100)
 	c.logger.DPrintf("become leader, terms: %v", c.currentTerm)
 	ticker := time.NewTicker(c.heartbeatInterval)
 	defer ticker.Stop()
@@ -214,38 +212,8 @@ func (c *Consensus) leaderLoop() {
 	for c.state == Leader {
 		// c.logger.DPrintf("len: [%v, %v, %v], commit: %v, seq: %v", len(c.blockChain.Blocks), len(c.blockTerms), len(c.reservedLog), c.commitIndex, c.seq)
 		select {
-		case <-ticker.C: // heartbeat
-			c.logger.DPrintf("send heartbeat!")
-
-			for id := range c.peers {
-				if id == int(c.id) {
-					continue
-				}
-
-				prevLogIndex := c.nextIndex[id] - 1
-				msg := &HeartbeatMsg{
-					Term:         c.currentTerm,
-					PrevLogIndex: prevLogIndex,
-					PrevLogTerm:  c.blockTerms[prevLogIndex],
-					EntryTerms:   c.blockTerms[c.nextIndex[id]:],
-					Entries:      c.reservedLog[c.nextIndex[id]:],
-					CommitIndex:  c.commitIndex,
-					Leaderid:     c.id,
-				}
-				go func(p *myrpc.ClientEnd) {
-					reply := &HeartbeatReply{}
-					p.Call("Consensus.OnReceiveHeartbeat", msg, reply)
-					// c.logger.DPrintf("Heartbeat Reply %v", reply)
-					heartbeatC <- reply
-				}(c.peers[id])
-			}
-
-			// c.propose()
-		case msg := <-heartbeatC:
-			// c.logger.DPrintf("process heartbeatreply")
-			c.handleHeartbeatReply(msg)
 		case event := <-c.eventChan:
-			// c.logger.DPrintf("process msgC")
+			c.logger.DPrintf("process event")
 			switch msg := event.Message.(type) {
 			case *myrpc.RequestVoteMsg:
 				_ = c.handleRequestVoteMsg(msg, event.Reply.(*myrpc.RequestVoteReply))
@@ -254,9 +222,55 @@ func (c *Consensus) leaderLoop() {
 			}
 			// call back to event
 			event.Err <- nil
-		}
+		default:
+			select {
+			case <-ticker.C: // heartbeat
+				c.logger.DPrintf("send heartbeat!")
 
-		c.propose()
+				for id := range c.peers {
+					if id == int(c.id) {
+						continue
+					}
+					prevLogIndex := c.nextIndex[id] - 1
+					tail := Min(c.seq, c.nextIndex[id]+max_chunk)
+					// c.logger.DPrintf("nextIndex %v, id: %v, tail: %v", c.nextIndex[id], id, tail)
+					c.logger.DPrintf("prevIndex %v, id: %v, tail: %v", prevLogIndex, id, tail)
+					msg := &HeartbeatMsg{
+						Term:         c.currentTerm,
+						PrevLogIndex: prevLogIndex,
+						PrevLogTerm:  c.blockTerms[prevLogIndex],
+						EntryTerms:   c.blockTerms[c.nextIndex[id]:tail],
+						Entries:      c.reservedLog[c.nextIndex[id]:tail],
+						CommitIndex:  c.commitIndex,
+						Leaderid:     c.id,
+					}
+					go func(p *myrpc.ClientEnd) {
+						reply := &HeartbeatReply{}
+						connect := p.Call("Consensus.OnReceiveHeartbeat", msg, reply)
+						if connect {
+							heartbeatC <- reply
+						}
+					}(c.peers[id])
+				}
+
+				// c.propose()
+			case msg := <-heartbeatC:
+				c.logger.DPrintf("process heartbeatreply")
+				c.handleHeartbeatReply(msg)
+				hasBuffer := true
+				for hasBuffer {
+					select {
+					case msg := <-heartbeatC:
+						c.handleHeartbeatReply(msg)
+					default:
+						hasBuffer = false
+					}
+				}
+			}
+		}
+		if c.state == Leader {
+			c.propose()
+		}
 	}
 }
 
@@ -351,7 +365,6 @@ func (c *Consensus) handleHeartbeatMsg(msg *HeartbeatMsg, reply *HeartbeatReply)
 	reply.Term = c.currentTerm
 	reply.Success = true
 	reply.LastLogIndex = c.seq - 1
-	// c.logger.DPrintf("committed index: %v, len: [%v, %v]", c.commitIndex, len(c.reservedLog), len(c.blockTerms))
 	return true
 }
 
@@ -363,26 +376,28 @@ func (c *Consensus) handleHeartbeatReply(msg *HeartbeatReply) {
 
 	if !msg.Success && c.nextIndex[msg.From] > 0 {
 		c.nextIndex[msg.From] = Min(c.nextIndex[msg.From]-1, msg.LastLogIndex+1)
+		c.logger.DPrintf("from %v, nextIndex: %v", msg.From, c.nextIndex[msg.From])
 		return
 	}
+
 	if msg.Success {
 		c.nextIndex[msg.From] = Min(msg.LastLogIndex+1, c.seq)
 		c.matchIndex[msg.From] = msg.LastLogIndex
-		committedIndex := c.commitIndex
-		for i := committedIndex + 1; i <= msg.LastLogIndex; i++ {
-			matchCnt := uint64(1)
-			for pid := range c.peers {
-				if c.matchIndex[pid] >= i {
-					matchCnt += 1
-				}
-			}
-			if matchCnt >= c.quorumSize {
-				block := c.reservedLog[i]
-				c.blockChain.commitBlock(block)
-				c.commitIndex = i
-			}
+
+		matchIndex := make([]uint64, c.n)
+		copy(matchIndex, c.matchIndex)
+		// sort inverse
+		sort.Slice(matchIndex, func(i, j int) bool {
+			return matchIndex[i] > matchIndex[j]
+		})
+		newCommitIndex := matchIndex[c.quorumSize-1]
+		for i := c.commitIndex + 1; i <= newCommitIndex; i++ {
+			block := c.reservedLog[i]
+			c.blockChain.commitBlock(block)
 		}
+		c.commitIndex = newCommitIndex
 	}
+
 }
 
 func (c *Consensus) OnReceiveRequestVoteMsg(args *myrpc.RequestVoteMsg, reply *myrpc.RequestVoteReply) error {
@@ -426,6 +441,7 @@ func (c *Consensus) appendBlocks(block *Block) {
 func (c *Consensus) propose() {
 	block := c.blockChain.getBlock(c.seq)
 	c.appendBlocks(block)
+	c.matchIndex[c.id] = c.seq - 1
 }
 
 func (c *Consensus) Run() {
